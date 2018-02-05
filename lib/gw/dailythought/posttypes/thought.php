@@ -23,7 +23,7 @@ class Thought {
         self::$initialized = true;
         // Post type actions
         add_filter('the_content', array('\GW\DailyThought\PostTypes\Thought', 'filterContent'), 0);
-        // add_filter('template_include', array('\GW\DailyThought\PostTypes\Thought', 'filterTemplateInclude'));
+        add_filter('template_include', array('\GW\DailyThought\PostTypes\Thought', 'filterTemplateInclude'));
 
         // Admin actions
         add_action('admin_menu', array('\GW\DailyThought\PostTypes\Thought\Admin', 'manageAdminMenu'));
@@ -57,7 +57,7 @@ class Thought {
                 'not_found_in_trash' => __('Not Found in Trash', self::$config->domain)
             ),
 
-            'supports' => array('editor', 'author', 'thumbnail'),
+            'supports' => array('title', 'slug', 'editor', 'author', 'thumbnail'),
             'taxonomies' => array('theme'),
             'rewrite' => array('slug' => $slug),
             'hierarchical' => false,
