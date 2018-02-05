@@ -23,7 +23,7 @@ class Thought {
         self::$initialized = true;
         // Post type actions
         add_filter('the_content', array('\GW\DailyThought\PostTypes\Thought', 'filterContent'), 0);
-        add_filter('template_include', array('\GW\DailyThought\PostTypes\Thought', 'filterTemplateInclude'));
+        // add_filter('template_include', array('\GW\DailyThought\PostTypes\Thought', 'filterTemplateInclude'));
 
         // Admin actions
         add_action('admin_menu', array('\GW\DailyThought\PostTypes\Thought\Admin', 'manageAdminMenu'));
