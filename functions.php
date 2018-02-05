@@ -42,6 +42,26 @@ function gwdt_daily_thought_shortcode($atts = [], $content = null, $tag = '') {
         'content' => $content
     ), $atts, 'daily_thought');
 
+    if ($atts['id'] === null) {
+        // No ID provided, so get a random one
+        $thoughts = get_posts(array('post_type' => 'thought', 'orderby' => 'rand', 'numberposts' => 1));
+        $post = count($thoughts) === 1 ? $thoughts[0] : null;
+    } else {
+        $post = get_post($atts['id']);
+    }
+
+    if ($post === null) {
+        // No post retrieved, so short circuit
+        return;
+    }
+
+    $atts['id'] = $post->ID;
+    $atts['reference'] = get_post_meta($post->ID, 'gw_dailythought_reference', true);
+    $atts['verse'] = get_post_meta($post->ID, 'gw_dailythought_verse', true);
+    $atts['content'] = $post->post_content;
+    $atts['author'] = $post->post_author;
+    $atts['category'] = wp_get_post_terms($post->ID, 'thought_theme', array('fields' => 'names'));
+
     return gwdt_get_template('daily-thought.php', $atts);
 }
 add_shortcode('daily_thought', 'gwdt_daily_thought_shortcode');

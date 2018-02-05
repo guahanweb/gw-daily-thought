@@ -1,0 +1,30 @@
+.gw-dailythought-passage .scripture-search {
+  padding: 10px 0;
+  border-bottom: 1px solid #ccc; }
+  .gw-dailythought-passage .scripture-search input[name="scripture-search"] {
+    width: 240px;
+    height: 28px;
+    margin: 0 4px 0 0; }
+  .gw-dailythought-passage .scripture-search .icon-spin {
+    display: inline-block; }
+    .gw-dailythought-passage .scripture-search .icon-spin.hidden > .dashicons {
+      opacity: 0; }
+    .gw-dailythought-passage .scripture-search .icon-spin > .dashicons {
+      opacity: 1;
+      color: #999;
+      -webkit-animation: spin 2s linear infinite;
+      -moz-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+      transition: opacity 0.2s ease-in-out; }
+@-moz-keyframes spin {
+  100% {
+    -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin {
+  100% {
+    -webkit-transform: rotate(360deg); } }
+@keyframes spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg); } }
+
+/*# sourceMappingURL=admin.css.map */

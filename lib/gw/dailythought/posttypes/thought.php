@@ -7,18 +7,15 @@ class Thought {
     private static $config;
     private static $initialized = false;
 
-    private static $nonce;
-
     public static function init() {
         if (!self::$initialized) {
             self::$config = DailyThought\Config::instance(GW_DAILYTHOUGHT_PLUGIN_NAME);
             self::initHooks();
             self::registerPostTypes();
             self::registerTaxonomies();
+            self::registerShortCodes();
 
             DailyThought\PostTypes\Thought\Admin::init();
-
-            self::$nonce = md5(GW_DAILYTHOUGHT_PLUGIN_NAME . self::$config->version);
         }
     }
 
@@ -26,7 +23,7 @@ class Thought {
         self::$initialized = true;
         // Post type actions
         add_filter('the_content', array('\GW\DailyThought\PostTypes\Thought', 'filterContent'), 0);
-        add_filter('template_include', array('\GW\DailyThought\PostTypes\Thought', 'filterTemplateInclude'));
+        // add_filter('template_include', array('\GW\DailyThought\PostTypes\Thought', 'filterTemplateInclude'));
 
         // Admin actions
         add_action('admin_menu', array('\GW\DailyThought\PostTypes\Thought\Admin', 'manageAdminMenu'));
@@ -34,6 +31,8 @@ class Thought {
         add_action('manage_thought_posts_custom_column', array('\GW\DailyThought\PostTypes\Thought\Admin', 'manageCustomColumns'), 10, 2);
         add_action('save_post', array('\GW\DailyThought\PostTypes\Thought\Admin', 'saveMetaData'));
         add_action('admin_menu', array('\GW\DailyThought\PostTypes\Thought\Admin', 'updateAdminMenu'));
+        add_action('admin_enqueue_scripts', array('\GW\DailyThought\PostTypes\Thought\Admin', 'enqueueScripts'), 10, 1);
+        add_action('edit_form_after_title', array('\GW\DailyThought\PostTypes\Thought\Admin', 'renderAdvancedBoxes'));
     }
 
     public static function registerPostTypes() {
@@ -59,7 +58,7 @@ class Thought {
             ),
 
             'supports' => array('editor', 'author', 'thumbnail'),
-            'taxonomies' => array('thought_theme'),
+            'taxonomies' => array('theme'),
             'rewrite' => array('slug' => $slug),
             'hierarchical' => false,
             'public' => true,
@@ -75,14 +74,14 @@ class Thought {
             'capability_type' => 'post',
 
             // Meta boxes
-            'register_meta_box_cb' => array('\GW\DailyThought\PostTypes\Thought', 'registerMetaBoxes')
+            'register_meta_box_cb' => array('\GW\DailyThought\PostTypes\Thought\Admin', 'registerMetaBoxes')
         ));
     }
 
     public static function registerTaxonomies() {
         register_taxonomy(
-            'thought_theme',
-            'thought',
+            'theme',
+            ['thought'],
             array(
                 'labels' => array(
                     'name' => __('Themes', self::$config->domain),
@@ -92,8 +91,8 @@ class Thought {
                 ),
                 'show_ui' => true,
                 'show_tagcloud' => false,
-                'hierarchicatl' => true,
-                'rewrite' => array('slug', 'thoughts')
+                'hierarchical' => true,
+                'rewrite' => array('slug', 'theme')
             )
         );
     }
@@ -108,5 +107,24 @@ class Thought {
         // http://jeroensormani.com/how-to-add-template-files-in-your-plugin/
         echo 'TEMPLATE: ' . $template;
         return $template;
+    }
+
+    public static function parseVerse($atts = [], $content = null, $tag) {
+        $atts = shortcode_atts(array(
+            'ref' => null,
+            'content' => $content
+        ), $atts, 'verse');
+
+        // consider filters here
+        $out = "<span class=\"gw-verse verse-quote\">${atts['content']}";
+        if (!is_null($atts['ref'])) {
+            $out .= "<span class=\"reference-holder\"><span class=\"reference\">${atts['ref']}</span></span>";
+        }
+        $out .= "</span>";
+        return $out;
+    }
+
+    public static function registerShortCodes() {
+        add_shortcode('verse', array('\GW\DailyThought\PostTypes\Thought', 'parseVerse'));
     }
 }

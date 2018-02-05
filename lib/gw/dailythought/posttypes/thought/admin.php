@@ -6,9 +6,11 @@ use GW\DailyThought\PostTypes\Thought;
 
 class Admin {
     private static $config;
+    private static $nonce;
 
     public static function init() {
         self::$config = DailyThought\Config::instance(GW_DAILYTHOUGHT_PLUGIN_NAME);
+        self::$nonce = md5(GW_DAILYTHOUGHT_PLUGIN_NAME . self::$config->version);
     }
 
     public static function manageAdminMenu() {
@@ -36,12 +38,12 @@ class Admin {
 
             case 'thought':
                 $post = get_post($post_id);
-                $content = $post->post_content;
+                $content = get_post_meta($post_id, 'gw_dailythought_blurb', true);
                 echo $content;
                 break;
 
             case 'theme':
-                $terms = wp_get_post_terms($post_id, 'thought_theme', array('fields' => 'names'));
+                $terms = wp_get_post_terms($post_id, 'theme', array('fields' => 'names'));
                 echo implode(', ', $terms);
                 break;
 
@@ -50,8 +52,15 @@ class Admin {
         }
     }
 
+    public static function renderAdvancedBoxes() {
+        global $post, $wp_meta_boxes;
+        do_meta_boxes(get_current_screen(), 'advanced', $post);
+        unset($wp_meta_boxes[get_post_type($post)]['advanced']);
+    }
+
     public static function registerMetaBoxes() {
-        add_meta_box('gw_dailythought_thought_scripture', __('Scripture', self::$config->domain), array('\GW\DailyThought\PostTypes\Thought\Admin', 'renderScriptureMetaBox'), 'thought', 'normal', 'default');
+        add_meta_box('gw_dailythought_thought_scripture', __('Verse', self::$config->domain), array('\GW\DailyThought\PostTypes\Thought\Admin', 'renderScriptureMetaBox'), 'thought', 'advanced', 'high');
+        add_meta_box('gw_dailythought_thought_short', __('Thought', self::$config->domain), array('\GW\DailyThought\PostTypes\Thought\Admin', 'renderThoughtMetaBox'), 'thought', 'advanced', 'high');
     }
 
     public static function saveMetaData($post_id) {
@@ -75,10 +84,71 @@ class Admin {
         if (isset($_POST['verse'])) {
             update_post_meta($post_id, 'gw_dailythought_verse', $_POST['verse']);
         }
+
+        if (isset($_POST['blurb'])) {
+            update_post_meta($post_id, 'gw_dailythought_blurb', $_POST['blurb']);
+        }
+    }
+
+    public static function renderThoughtMetaBox($post) {
+        $id = $post->ID;
+        $thought = get_post_meta($post->ID, 'gw_dailythought_blurb', true);
+
+        echo <<<EOT
+<div class="gw-dailythought-blurg" id="blurb-${id}">
+    <div class="containter">
+        <div class="blurb-entry">
+EOT;
+
+        wp_editor(esc_html($thought), 'gw_dailythought_thought', array(
+            'teeny' => true,
+            'textarea_name' => 'blurb',
+            'textarea_rows' => 6,
+            'media_buttons' => false,
+            'tabindex' => 2,
+            'quicktags' => false
+        ));
+
+        echo <<<EOT
+        </div>
+    </div>
+</div>
+EOT;
     }
 
     public static function renderScriptureMetaBox($post) {
         wp_nonce_field(basename(__FILE__), self::$nonce);
+
+        $id = $post->ID;
+        $refid = get_post_meta($post->ID, 'gw_dailythought_refid', true);
+        $reference = get_post_meta($post->ID, 'gw_dailythought_reference', true);
+        $passage = get_post_meta($post->ID, 'gw_dailythought_verse', true);
+
+        echo "<div class=\"gw-dailythought-passage\" id=\"passage-${id}\">
+                <div class=\"container\">
+                    <div class=\"scripture-search\">
+                        <input type=\"hidden\" name=\"refid\" id=\"refid\" value=\"" . esc_html($refid) . "\">
+                        <label for=\"reference\">Reference</label>
+                        <input type=\"text\" name=\"reference\" id=\"reference\" value=\"" . esc_html($reference) . "\" class=\"widefat\">
+                    </div>
+                    <div class=\"result\">
+                        <div class=\"content\">
+                            <label for=\"gw_dailythought_verse\">Text</label>";
+
+        wp_editor(esc_html($passage), 'gw_dailythought_verse', array(
+            'teeny' => true,
+            'textarea_name' => 'verse',
+            'textarea_rows' => 4,
+            'media_buttons' => false,
+            'tabindex' => 1,
+            'quicktags' => false
+        ));
+
+        echo "</div>
+                    </div>
+                </div>
+            </div>";
+        return;
 
         // reference
         $reference = get_post_meta($post->ID, 'gw_dailythought_reference', true);
@@ -100,5 +170,15 @@ class Admin {
         global $menu;
         // possible removal list
         $for_removal = array('menu-posts', 'menu-links', 'menu-pages', 'menu-comments', 'menu-appearance', 'menu-plugins', 'menu-users', 'menu-tools', 'menu-settings');
+    }
+
+    public static function enqueueScripts($hook) {
+        global $post;
+        if ($hook == 'post-new.php' || $hook == 'post.php') {
+            if ($post->post_type === 'thought') {
+                wp_enqueue_script('gw-dailythought-admin.js', self::$config->plugin_uri . '/assets/js/admin.js');
+                wp_enqueue_style('gw-dailythought-admin.css', self::$config->plugin_uri . '/assets/css/admin.css');
+            }
+        }
     }
 }
