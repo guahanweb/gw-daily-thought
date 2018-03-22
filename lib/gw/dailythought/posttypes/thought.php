@@ -81,7 +81,7 @@ class Thought {
     public static function registerTaxonomies() {
         register_taxonomy(
             'theme',
-            ['thought'],
+            self::$config->post_type,
             array(
                 'labels' => array(
                     'name' => __('Themes', self::$config->domain),
@@ -89,9 +89,8 @@ class Thought {
                     'add_new_item' => __('Add Thought Theme', self::$config->domain),
                     'new_item_name' => __('New Thought Theme', self::$config->domain)
                 ),
-                'show_ui' => true,
-                'show_tagcloud' => false,
                 'hierarchical' => true,
+                'show_in_nav_menus' => true,
                 'rewrite' => array('slug', 'theme')
             )
         );
