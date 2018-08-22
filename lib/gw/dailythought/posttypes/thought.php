@@ -33,6 +33,25 @@ class Thought {
         add_action('admin_menu', array('\GW\DailyThought\PostTypes\Thought\Admin', 'updateAdminMenu'));
         add_action('admin_enqueue_scripts', array('\GW\DailyThought\PostTypes\Thought\Admin', 'enqueueScripts'), 10, 1);
         add_action('edit_form_after_title', array('\GW\DailyThought\PostTypes\Thought\Admin', 'renderAdvancedBoxes'));
+
+        // RSS feed actions
+        add_filter('the_content', array(__CLASS__, 'rssAddVerse'), 10, 1);
+    }
+
+    // if we're in a daily thought, add the verse
+    public static function rssAddVerse($content) {
+        $id = get_the_ID();
+        var_dump($id);
+        $post = get_post($id);
+
+        if ($post->post_type === self::$config->post_type && is_feed()) {
+            $verse = get_post_meta($post->ID, 'gw_dailythought_verse', true);
+            $reference = get_post_meta($post->ID, 'gw_dailythought_reference', true);
+
+            $extra = "<p><b>$reference</b><br><i>$verse</i></p>";
+            return $extra . $content;
+        }
+        return $content;
     }
 
     public static function registerPostTypes() {
