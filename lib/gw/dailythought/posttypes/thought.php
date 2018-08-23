@@ -41,7 +41,6 @@ class Thought {
     // if we're in a daily thought, add the verse
     public static function rssAddVerse($content) {
         $id = get_the_ID();
-        var_dump($id);
         $post = get_post($id);
 
         if ($post->post_type === self::$config->post_type && is_feed()) {
