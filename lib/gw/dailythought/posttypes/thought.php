@@ -75,7 +75,7 @@ class Thought {
                 'not_found_in_trash' => __('Not Found in Trash', self::$config->domain)
             ),
 
-            'supports' => array('title', 'slug', 'editor', 'author', 'thumbnail'),
+            'supports' => array('title', 'slug', 'editor', 'author', 'thumbnail', 'publicize'),
             'taxonomies' => array('theme'),
             'rewrite' => array('slug' => $slug),
             'hierarchical' => false,
